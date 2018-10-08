@@ -61,11 +61,12 @@ def f_price(request):
     if user_id:
         carts = ShoppingCart.objects.filter(user_id=user_id)
         cart_data = {}
-        cart_data['goods_price'] = [(cart.goods_id, cart.nums * cart.goods.shop_price)
+        cart_data['goods_price'] = [(cart.goods_id, cart.nums * cart.goods.shop_price, cart.is_select)
                                     for cart in carts]
         all_price = 0
         for cart in carts:
-            all_price += cart.nums * cart.goods.shop_price
+            if cart.is_select:
+                all_price += cart.nums * cart.goods.shop_price
         cart_data['all_price'] = all_price
     else:
         session_goods = request.session.get('goods')
@@ -88,30 +89,31 @@ def f_price(request):
 def check(request):
     if request.method == 'POST':
         goods_id = request.POST.get('goods_id')
-        session_goods = request.session['goods']
+        session_goods = request.session.get('goods')
         data = []
-        for goods in session_goods:
-            if goods_id == goods[0]:
-                if goods[2]:
-                    goods[2] = False
-                else:
-                    goods[2] = True
-            data.append(goods)
-        if data:
+        if session_goods:
+            for goods in session_goods:
+                if goods_id == goods[0]:
+                    if goods[2]:
+                        goods[2] = False
+                    else:
+                        goods[2] = True
+                data.append(goods)
             request.session['goods'].clear()
             request.session['goods'] = data
             return JsonResponse({'code': 200, 'goods': session_goods})
         else:
-            shop_cart = ShoppingCart.objects.filter(id=goods_id).first()
+            shop_cart = ShoppingCart.objects.filter(goods_id=goods_id).first()
             if shop_cart.is_select:
                 shop_cart.is_select = False
             else:
                 shop_cart.is_select = True
             shop_cart.save()
+
             return JsonResponse({'code': 200, 'msg': '请求成功'})
 
 
-def ChangeSessionGoods(request):
+def change_session_goods(request):
     if request.method == 'POST':
         goods_id = request.POST.get('goods_id')
         goods_num = request.POST.get('goods_num')
@@ -126,3 +128,30 @@ def ChangeSessionGoods(request):
             shop_cart.nums = goods_num
             shop_cart.save()
         return JsonResponse({'code': 200, 'msg': '请求成功'})
+
+
+def cart_count(request):
+    if request.method == 'GET':
+        user_id = request.session.get('user_id')
+        if user_id:
+            count = ShoppingCart.objects.filter(user_id=user_id).count()
+        else:
+            session_goods= request.session.get('goods')
+            count = len(session_goods)
+        return JsonResponse({'code': 200, 'msg': '请求成功', 'count': count})
+
+
+def delete_goods(request):
+    if request.method == 'POST':
+        goods_id = request.POST.get('goods_id')
+        goods = request.session.get('goods')
+        for session_goods in goods:
+            if session_goods[0] == goods_id:
+                goods.delete(session_goods)
+        user_id = request.session.get('user_id')
+
+        if user_id:
+            ShoppingCart.objects.filter(user_id=user_id, goods_id=goods_id).delete()
+        return JsonResponse({'code': 200, 'msg': '删除成功'})
+
+

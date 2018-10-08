@@ -13,10 +13,11 @@ class UserAuthMiddleware(MiddlewareMixin):
     def process_request(self, request):
         # 登录验证得中间件
         # 不需要验证的地址
-        not_need_check = ['/home/index/', '/users/login/',
+        not_need_check = ['/home/index/', '/users/login/','/cart/delete_goods/',
                           '/users/register/', '/cart/check/', '/cart/cart/',
                           '/cart/f_price/', '/cart/add_cart/',
-                          '/media/(.*)/', '/static/(.*)', '/goods/goods_detail/(\d+)/']
+                          '/media/(.*)/', '/static/(.*)', '/cart/cart_count/',
+                          '/goods/goods_detail/(\d+)/']
         path = request.path
         for not_path in not_need_check:
             if re.match(not_path, path):

@@ -16,7 +16,7 @@
 		</div>
 	</div>
 
-	<div class="total_count">全部商品<em>2</em>件</div>
+	<div class="total_count">全部商品<em>0</em>件</div>
 	<ul class="cart_list_th clearfix">
 		<li class="col01">商品名称</li>
 		<li class="col02">商品单位</li>
@@ -42,7 +42,7 @@
                     </div>
                 </li>
                 <li class="col07" id="goods_{{ goods.0.id }}">0.0元</li>
-                <li class="col08"><a href="javascript:;">删除</a></li>
+                <li class="col08"><a href="javascript:;" onclick="delete_goods({{ goods.0.id }})">删除</a></li>
             </ul>
         {% endfor %}
     {% endif %}
@@ -70,7 +70,7 @@
                 <!--修改session中的商品数量-->
                 var csrf = $('input[name="csrfmiddlewaretoken"]').val()
                 $.ajax({
-                    url:'/shopping/change_session_goods/',
+                    url:'/cart/change_session_goods/',
                     type:'POST',
                     data:{'goods_id': goods_id, 'goods_num': goods_num},
                     dataType:'json',
@@ -115,12 +115,30 @@
 
         }
 
+        function delete_goods(id) {
+
+            var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            $.ajax({
+                url:'/cart/delete_goods/',
+                type:'POST',
+                dataType:'json',
+                headers: {'X-CSRFToken': csrf},
+                data: {'goods_id': id},
+                success:function (data) {
+                    if(data.code == '200'){
+                        alert('删除成功')
+                        total_price()
+                    }
+                }
+            })
+
+        }
 
     </script>
 	<ul class="settlements">
 		<li class="col01"><input type="checkbox" name="" checked=""></li>
 		<li class="col02">全选</li>
-		<li class="col03" id="total_price">合计(不含运费)：<span>¥</span><em>00.00</em><br>共计<b>2</b>件商品</li>
+		<li class="col03" id="total_price">合计(不含运费)：<span>¥</span><em>00.00</em><br>共计<b>0</b>件商品</li>
 		<li class="col04"><a href="{% url 'orders:order' %}">去结算</a></li>
 	</ul>
 
